@@ -31,7 +31,9 @@ int latch_time = 1000;     // время (в миллисекундах), кот
 #include <LowPower.h>   // библиотека сна
 //----------------------БИБЛИОТЕКИ------------------------
 
-
+#define LEDred A0                // красный светодиод на А0
+#define LEDgrn A1                // зелёный светодиод на А1
+#define LEDgnd A2                // земля светодиодов на А2
 #define set_pass_btn 4           // кнопка смены пароля на 4 пин
 boolean set_pass_btn_flag;       // флажок кнопки смены пароля
 boolean batteryOK = true;        // дверь можно закрыть, если акум заряжен
@@ -53,6 +55,11 @@ void setup() {
   pinMode(A3, OUTPUT);
   digitalWrite(A4, latch_inverse);
 
+  pinMode(LEDred, OUTPUT);
+  pinMode(LEDgrn, OUTPUT);
+  pinMode(LEDgnd, OUTPUT);
+  digitalWrite(LEDgnd, 0);
+
   //----читаем из памяти-----
   my_vcc_const = EEPROM.readFloat(1000);
   //----читаем из памяти-----
@@ -67,7 +74,7 @@ void setup() {
 void open_door() {
   //--------ОТКРЫТЬ---------
   digitalWrite(A4, !latch_inverse);  // подать ток на защёлку
-  delay(latch_time);                 // подождать 
+  delay(latch_time);                 // подождать
   digitalWrite(A4, latch_inverse);   // прекратить подачу тока
   //--------ОТКРЫТЬ---------
   // если не открыли до таймера, считать закрытой

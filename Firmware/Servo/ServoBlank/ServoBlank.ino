@@ -31,6 +31,9 @@ boolean open_bat_low = 1;  // 1 - открыть дверь, если акум �
 #include <Servo.h>      //используем библиотеку для работы с сервоприводом
 //---------------------------БИБЛИОТЕКИ-----------------------------
 
+#define LEDred A0                // красный светодиод на А0
+#define LEDgrn A1                // зелёный светодиод на А1
+#define LEDgnd A2                // земля светодиодов на А2
 #define set_pass_btn 4           // кнопка смены пароля на 4 пин
 boolean set_pass_btn_flag;       // флажок кнопки смены пароля
 boolean batteryOK = true;        // дверь можно закрыть, если акум заряжен
@@ -50,6 +53,11 @@ void setup() {
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
   pinMode(set_pass_btn, INPUT_PULLUP);
+
+  pinMode(LEDred, OUTPUT);
+  pinMode(LEDgrn, OUTPUT);
+  pinMode(LEDgnd, OUTPUT);
+  digitalWrite(LEDgnd, 0);
 
   //----читаем из памяти-----
   my_vcc_const = EEPROM.readFloat(1000);
