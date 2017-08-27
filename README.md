@@ -11,7 +11,7 @@
 * Blank_v1.2 - исправлен глюк с приводом! Теперь работает стабильно
 
 ## Схема кнопок
-![Buttons](https://github.com/AlexGyver/Electro_lock/blob/master/Schematics/scheme_blank.jpg)
+![Buttons](https://github.com/AlexGyver/Electro_lock/blob/master/Schematics/scheme_blank.png)
 
 ## Материалы и компоненты
 * http://alexgyver.ru/electro_lock/
