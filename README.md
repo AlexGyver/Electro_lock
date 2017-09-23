@@ -5,11 +5,15 @@
 **Schematics** - папка со схемами подключения  
 **Firmware** - папка с прошивками  
 * **Blank** - "пустой" скетч со всеми настройками и функциями
+**Source** - папка с алгоритмами (для разработчиков)
+* **keypad_pass** - алгоритм работы с клавиатурой и паролем
 
-Страница проекта на сайте (ссылки на компоненты, ещё схемы): http://alexgyver.ru/electro_lock/  
+## Страница проекта на сайте
+http://alexgyver.ru/electro_lock/
 
 ## Changelog
 * Blank_v1.2 - исправлен глюк с приводом! Теперь работает стабильно
+* Blank_v1.3 - исправлено несколько багов, улучшена стабильность
 
 ## Схема кнопок
 ![Buttons](https://github.com/AlexGyver/Electro_lock/blob/master/Schematics/scheme_blank.png)
