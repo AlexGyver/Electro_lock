@@ -5,7 +5,7 @@ unsigned long pass_timer;
 char key;
 String str_pass = "";
 byte pass_lenght, j;
-unsigned long int_pass; // 10 знаков моксимум!!
+unsigned long int_pass; // 10 знаков максимум!!
 char keys[4][3] = {
   {'1', '2', '3'},
   {'4', '5', '6'},
@@ -13,14 +13,14 @@ char keys[4][3] = {
   {'*', '0', '#'}
 };
 byte rowPins[] = {12, 11, 10, 9};     // Подключены строки (4 пина)
-byte colPins[] = {8, 7, 6};          // подключены столбцы (4 пина)
-Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, 4, 3 ); //иниициализировать клавиатуру
+byte colPins[] = {8, 7, 6};          // Подключены столбцы (3 пина)
+Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, 4, 3 ); //инициализировать клавиатуру
 
 void setup() {
   Serial.begin(9600);
   int_pass = EEPROM.readLong(0);     // вспоминаем пароль из памяти
   str_pass = String(int_pass, DEC);  // переводим в строчный тип
-  pass_lenght = str_pass.length();   // получиаем длину пароля
+  pass_lenght = str_pass.length();   // получаем длину пароля
 
   str_pass = "";                       // сброс пароля (пустая строка)
   pass_timer = millis();               // сброс таймера ввода пароля
@@ -31,7 +31,7 @@ void setup() {
       if (key == '*') {                // если нажата *
         int_pass = str_pass.toInt();   // перевести в число
         EEPROM.writeLong(0, int_pass); // записать в память
-        pass_lenght = str_pass.length();   // получиаем длину пароля
+        pass_lenght = str_pass.length();   // получаем длину пароля
         break;                         // выйти из цикла
       }
       else if (key == '#') {           // если нажата #
