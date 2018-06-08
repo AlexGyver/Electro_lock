@@ -1,0 +1,213 @@
+/******************************************************************
+ *      Этот скетч предназначен для открытия/закрытия шеколды     *
+ *                                                                *
+ *                         Логика работы:                         *
+ * При нажатии любой клавиши происходит пробуждение, и ожидается  *
+ * ввод пароля. Если не ввести пароль в течении 10 секунд(можно   *
+ * изменить), то система уснет. Пароль следует вводить            *
+ * предварительно нажав "*", после ввода необходимо нажать "#".   *
+ * Для смены пароля нужно нажать "#*#", а затем ввести пароль,    *
+ * нажать "#" и ввести новый пароль, после снова нажать "#".      *
+ *                                                                *
+ *                 Также я использовал этот скетч:                *
+ *        http://www.gammon.com.au/forum/?id=11497#reply4         *
+ *                                                                *
+ *             Автор скетча: Я(DeNcHiK6281505(4PDA),              *
+ *             DeNcHiK3713(http://arduino.ru/forum)),             *
+ * Почта: den6281505@gmail.com(помечайте важным, могу не увидеть) *
+ *           Пишите идеи для реализации в этом проекте.           *
+ ******************************************************************/
+
+// Описание библиотек
+ 
+#include <Keypad.h>    // Библиотека для работы с клавиатурой
+#include <EEPROMex.h>  // Дополненая библиотека для работы с энергонезависимой памятью arduino
+#include <avr/sleep.h> // Библиотека для энергосбережения
+#include <avr/power.h> // Библиотека для энергосбережения
+
+#define time_before_sleep 10000 // время до полного засапыния
+
+#define default_pass "0000" // Стандартный пароль
+// Пароль максимум 9 символов
+
+#define ROWS 4 // Количество строк
+#define COLS 3 // Количество столбцов
+
+char keys[ROWS][COLS] = {
+  {'1', '2', '3'},
+  {'4', '5', '6'},
+  {'7', '8', '9'},
+  {'*', '0', '#'}
+};
+
+byte rowPins[ROWS] = {12, 11, 10, 9}; // Подключены строки (4 пина)
+byte colPins[COLS] = {8, 7, 6};       // подключены столбцы (3 пина)
+
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, 4, 3);
+
+unsigned long last_time; // Время последнего использования
+
+String pass = "";
+String new_pass = "";
+uint8_t t = 1; // Счетчик следит за правильностью пароля
+uint8_t m = 0; // Счетчик для изменения пароля, следит за нажатием "#*#" для вызова режима смены пароля
+
+ISR(PCINT0_vect)
+{
+  PCICR = 0;
+}
+ISR(PCINT1_vect)
+{
+  PCICR = 0;
+}
+ISR(PCINT2_vect)
+{
+  PCICR = 0;
+}
+
+void reconfigurePins() {
+  for(uint8_t i = 0; i < ROWS ; i++) {
+    pinMode(colPins[i], OUTPUT);
+    digitalWrite(colPins[i], HIGH);
+  }
+  for(uint8_t i = 0; i < COLS ; i++)
+  {
+    pinMode(rowPins[i], INPUT_PULLUP);
+  }
+}
+
+void GoToSleep() {
+  t = 0;
+  m = 0;
+  new_pass = "";
+  for(uint8_t i = 0; i < COLS; i++) {
+    pinMode(colPins[i], OUTPUT);
+    digitalWrite(colPins[i], LOW);
+  }
+  for(uint8_t i = 0; i < ROWS; i++) {
+    pinMode(rowPins[i], INPUT_PULLUP);
+  }
+  for(uint8_t i = 0; i < ROWS; i++) {
+    if(digitalRead(rowPins[i]) == LOW)
+    {
+      reconfigurePins();
+      return;
+    }
+  }
+  delay(50);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_enable();
+  byte old_ADCSRA = ADCSRA;
+  ADCSRA = 0;
+  power_all_disable();
+  PCIFR |= bit(PCIF0) | bit(PCIF1) | bit(PCIF2);
+  PCICR |= bit(PCIE0) | bit(PCIE1) | bit(PCIE2);
+  MCUCR = bit(BODS) | bit(BODSE);
+  MCUCR = bit(BODS);
+  sleep_cpu();
+  sleep_disable();
+  power_all_enable();
+  ADCSRA = old_ADCSRA;
+  reconfigurePins();
+}
+
+void unlock() {
+
+}
+
+void change_pass() {
+  pass = new_pass;
+  EEPROM.writeLong(0, pass.toInt());
+}
+
+void setup() {
+  PCMSK2 |= bit (PCINT4); // pin 12
+  PCMSK2 |= bit (PCINT3); // pin 11
+  PCMSK0 |= bit (PCINT2); // pin 10
+  PCMSK0 |= bit (PCINT1); // pin 9
+  /*
+    Pin change interrupts.
+    Pin              Mask / Flag / Enable
+
+    D0    PCINT16 (PCMSK2 / PCIF2 / PCIE2)
+    D1    PCINT17 (PCMSK2 / PCIF2 / PCIE2)
+    D2    PCINT18 (PCMSK2 / PCIF2 / PCIE2)
+    D3    PCINT19 (PCMSK2 / PCIF2 / PCIE2)
+    D4    PCINT20 (PCMSK2 / PCIF2 / PCIE2)
+    D5    PCINT21 (PCMSK2 / PCIF2 / PCIE2)
+    D6    PCINT22 (PCMSK2 / PCIF2 / PCIE2)
+    D7    PCINT23 (PCMSK2 / PCIF2 / PCIE2)
+    D8    PCINT0 (PCMSK0 / PCIF0 / PCIE0)
+    D9    PCINT1 (PCMSK0 / PCIF0 / PCIE0)
+    D10   PCINT2 (PCMSK0 / PCIF0 / PCIE0)
+    D11   PCINT3 (PCMSK0 / PCIF0 / PCIE0)
+    D12   PCINT4 (PCMSK0 / PCIF0 / PCIE0)
+    D13   PCINT5 (PCMSK0 / PCIF0 / PCIE0)
+    A0    PCINT8 (PCMSK1 / PCIF1 / PCIE1)
+    A1    PCINT9 (PCMSK1 / PCIF1 / PCIE1)
+    A2    PCINT10 (PCMSK1 / PCIF1 / PCIE1)
+    A3    PCINT11 (PCMSK1 / PCIF1 / PCIE1)
+    A4    PCINT12 (PCMSK1 / PCIF1 / PCIE1)
+    A5    PCINT13 (PCMSK1 / PCIF1 / PCIE1)
+  */
+  pinMode(2, INPUT);
+  pass = String(EEPROM.readLong(0), DEC);
+  if(pass == "4294967295") { // Возможно тут будет значение ""
+    pass = default_pass;
+  }
+}
+
+void loop() {
+  char key = keypad.getKey(); // Получаем нажатую клавишу
+  switch(key) {
+    case '*':
+      t = 1;
+      new_pass == "";
+      if(m == 1) {
+        m = 2;
+      } else {
+        m = 0;
+      }
+      last_time = millis();
+      break;
+
+    case '#':
+      if(m == 4) {
+        change_pass();
+      } else if(t > pass.length()) {
+        if(m == 3) {
+          m = 4;
+        } else {
+          unlock();
+        }
+      }
+      new_pass == "";
+      t = 0;
+      if(m == 0 || m == 2) {
+        m++;
+      } else {
+        m = 0;
+      }
+      last_time = millis();
+      break;
+
+    case NO_KEY:
+      if(millis() - last_time >= time_before_sleep) {
+        GoToSleep();
+      }
+      break;
+    default:
+      if(m == 4) {
+        new_pass += key;
+      } else {
+        m = 0;
+        if(t > 0 && key == pass[t - 1] && t < pass.length()) {
+          t++;
+        } else {
+          t = 0;
+        }
+      }
+      last_time = millis();
+      break;
+  }
+}
